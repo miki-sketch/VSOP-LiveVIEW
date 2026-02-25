@@ -57,8 +57,9 @@ def load_data():
         except Exception as e:
             return f"演奏曲目シート(gid={gid_songs})の読み込みに失敗しました: {e}", None
 
-        df_lives.columns = df_lives.columns.str.strip()
-        df_songs.columns = df_songs.columns.str.strip()
+        # 全ての列名の前後の空白を削除
+        df_lives.columns = [str(c).strip() for c in df_lives.columns]
+        df_songs.columns = [str(c).strip() for c in df_songs.columns]
 
         return df_lives, df_songs
     except Exception as e:
@@ -77,76 +78,95 @@ df_songs: pd.DataFrame = res_s
 # タイトル
 st.title("VSOPライブ情報")
 
-# 列名の選定（柔軟に対応）
+# 列名の選定（さらに柔軟に対応）
 col_lives = df_lives.columns.tolist()
 col_songs = df_songs.columns.tolist()
 
-# ID列の特定: 「ライブID」がなければ「ライブ番号」を探す
-id_col_lives = 'ライブID' if 'ライブID' in col_lives else ('ライブ番号' if 'ライブ番号' in col_lives else None)
-id_col_songs = 'ライブID' if 'ライブID' in col_songs else ('ライブ番号' if 'ライブ番号' in col_songs else None)
+# 1. 紐付け用ID列の特定
+# ユーザー要望どおり「ライブ番号」を優先
+id_col_lives = next((c for c in ['ライブ番号', 'ライブID', 'LiveID'] if c in col_lives), col_lives[0] if col_lives else None)
+id_col_songs = next((c for c in ['ライブ番号', 'ライブID', 'LiveID'] if c in col_songs), None)
+
+# 2. 表示用列の特定 (Lives)
+date_col = next((c for c in ['日付', '開催日', 'Date'] if c in col_lives), None)
+live_name_col = next((c for c in ['ライブ名', '名称', 'LiveName'] if c in col_lives), None)
+
+# 3. 表示用列の特定 (Songs)
+song_name_col = next((c for c in ['楽曲名', '曲名', '曲', '名称', 'Title'] if c in col_songs), None)
+# もし見つからず、1番目の列が名前なし(Unnamed)等の場合は1番目を使う
+if not song_name_col and len(col_songs) > 0:
+    if 'Unnamed' in col_songs[0] or col_songs[0] == "":
+         song_name_col = col_songs[0]
+
+vocal_col = next((c for c in ['ボーカル', 'Vocal', 'ボーカリスト'] if c in col_songs), None)
+time_col = next((c for c in ['STARTTIME', 'TIME', '時間', '開始時間'] if c in col_songs), None)
+sort_col = next((c for c in ['曲順', '演奏順', 'No'] if c in col_songs), None)
 
 # サイドバー
 with st.sidebar:
     st.header("検索・選択")
-    # 「日付」と「ライブ名」を表示に使用
-    date_col = '日付' if '日付' in col_lives else ('開催日' if '開催日' in col_lives else None)
-    name_col_lives = 'ライブ名' if 'ライブ名' in col_lives else ('名称' if '名称' in col_lives else None)
 
-    if date_col and name_col_lives:
-        df_lives['display_name'] = df_lives[date_col].astype(str) + " " + df_lives[name_col_lives].astype(str)
+    if date_col and live_name_col:
+        # 表示名作成
+        df_lives['display_name'] = df_lives[date_col].astype(str) + " " + df_lives[live_name_col].astype(str)
         live_list = df_lives['display_name'].tolist()
         selected_live_display = st.selectbox("ライブを選択してください", live_list)
         selected_live_row = df_lives[df_lives['display_name'] == selected_live_display].iloc[0]
     else:
-        st.error(f"ライブ情報シートに必要な列が見つかりません。 (列名: {', '.join(col_lives)})")
+        st.error(f"ライブ情報の列が特定できません。 (列: {', '.join(col_lives)})")
         st.stop()
 
     st.markdown("---")
     st.warning("⚠️ エラーが出る場合は自動翻訳をオフにしてください。")
     
-    # デバッグ情報の表示切り替え
+    # デバッグ情報の表示
     with st.expander("🛠 デバッグ情報（開発用）"):
-        st.write("ライブ情報列:", col_lives)
-        st.write("演奏曲目列:", col_songs)
-        st.write("紐付け列:", f"Lives:{id_col_lives} / Songs:{id_col_songs}")
+        st.write("▼ライブ情報（先頭5行）")
+        st.dataframe(df_lives.head())
+        st.write("▼演奏曲目（先頭5行）")
+        st.dataframe(df_songs.head())
+        st.write("特定された列:", {
+            "ID(Lives)": id_col_lives,
+            "ID(Songs)": id_col_songs,
+            "曲名": song_name_col,
+            "ボーカル": vocal_col,
+            "時間": time_col
+        })
 
 # 結果表示
 if id_col_lives and id_col_songs:
     live_id_val = selected_live_row[id_col_lives]
-    # 数値/文字列の不一致を避けるため両方strにする
+    # 文字列として比較
     songs_to_display = df_songs[df_songs[id_col_songs].astype(str) == str(live_id_val)].copy()
 else:
-    st.warning("紐付け用のID（ライブID または ライブ番号）が両方のシートに見つかりません。")
+    st.warning("紐付け用のID（ライブ番号等）が特定できません。")
     st.stop()
 
 if songs_to_display.empty:
-    st.info(f"選択されたライブ（ID: {live_id_val}）に該当する曲が見つかりませんでした。")
+    st.info(f"該当する曲が見つかりませんでした。 (選択ID: {live_id_val})")
     st.stop()
 
 st.subheader(f"演奏曲目: {selected_live_display}")
 
 # ソート
-sort_col = '曲順' if '曲順' in col_songs else None
 if sort_col:
     songs_to_display = songs_to_display.sort_values(by=sort_col)
 
 # 曲リストの生成
 video_link_base = selected_live_row.get('動画リンク', "")
-song_name_col = '楽曲名' if '楽曲名' in col_songs else '曲名'
-vocal_col = 'ボーカル' if 'ボーカル' in col_songs else 'Vocal'
-time_col = 'STARTTIME' if 'STARTTIME' in col_songs else ('TIME' if 'TIME' in col_songs else None)
 
-if song_name_col in col_songs and vocal_col in col_songs:
+if song_name_col and vocal_col:
     content_html = '<div style="font-family: sans-serif; line-height: 2.0; color: #31333F;">'
     for _, song in songs_to_display.iterrows():
         s_name = song[song_name_col]
-        s_vocal = song[vocal_col]
-        s_time = song[time_col] if time_col else 0
+        # NaN 対策
+        s_name = s_name if pd.notna(s_name) else "(名称未設定)"
+        s_vocal = song[vocal_col] if pd.notna(song[vocal_col]) else ""
+        s_time = song[time_col] if time_col and pd.notna(song[time_col]) else 0
         
         youtube_link = ""
-        if pd.notna(video_link_base) and pd.notna(s_time):
+        if pd.notna(video_link_base) and s_time != 0:
             try:
-                # 00:00 形式の変換
                 if isinstance(s_time, str) and ":" in s_time:
                     parts = s_time.split(':')
                     seconds = int(parts[-1]) + int(parts[-2]) * 60 + (int(parts[-3]) * 3600 if len(parts) > 2 else 0)
@@ -164,4 +184,4 @@ if song_name_col in col_songs and vocal_col in col_songs:
     height = max(400, len(songs_to_display) * 45)
     components.html(content_html, height=height, scrolling=True)
 else:
-    st.error(f"表示に必要な列（曲名、ボーカル）が見つかりません。")
+    st.error(f"曲名またはボーカルの列が見つかりません。デバッグ情報を確認してください。")
