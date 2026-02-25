@@ -13,9 +13,8 @@ st.markdown("""
         document.body.setAttribute('translate', 'no');
     </script>
     <style>
-    .stApp { background-color: #f0f2f6; } /* 全体の背景を少しグレーに */
+    .stApp { background-color: #f0f2f6; }
     div[data-testid="stSidebar"], div[data-testid="stMain"] { translate: no !important; }
-    /* メインコンテンツエリアの背景 */
     .block-container {
         background-color: #ffffff;
         padding: 2rem;
@@ -68,12 +67,12 @@ col_lives, col_songs, col_f = df_lives.columns.tolist(), df_songs.columns.tolist
 
 id_col_lives = next((c for c in ['ライブ番号', 'ライブID'] if c in col_lives), col_lives[0] if col_lives else None)
 id_col_songs = next((c for c in ['ライブ番号', 'ライブID'] if c in col_songs), None)
-id_col_f = next((c for c in ['ライブ番号', 'ライブID'] if c in col_f), None)
+id_col_f = next((c for c in ['ライブ番号', 'ライブID'] if c in col_f), col_f[0] if col_f else None)
 
 date_col = next((c for c in ['日付', '開催日'] if c in col_lives), None)
 live_name_col = next((c for c in ['ライブ名', '名称'] if c in col_lives), None)
 
-# 共通スタイルの定義
+# 共通スタイル
 table_style = """
 <style>
     .frame-container { background-color: #fdfdfd; padding: 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 20px; }
@@ -98,21 +97,14 @@ with st.sidebar:
         selected_live_display = st.selectbox("ライブを選択してください", df_lives['display_name'].tolist())
         selected_live_row = df_lives[df_lives['display_name'] == selected_live_display].iloc[0]
     else:
-        st.error("必要な列が見つかりません。")
         st.stop()
-
-    st.markdown("---")
     st.warning("⚠️ 翻訳をオフにしてください。")
-    with st.expander("🛠 デバッグ情報"):
-        st.write("Feedback 列:", col_f)
 
-# ID取得と抽出
+# 抽出
 if id_col_lives:
     live_id_val = selected_live_row[id_col_lives]
     songs_to_display = df_songs[df_songs[id_col_songs].astype(str) == str(live_id_val)].copy() if id_col_songs else pd.DataFrame()
     feedback_to_display = df_feedback[df_feedback[id_col_f].astype(str) == str(live_id_val)].copy() if id_col_f else pd.DataFrame()
-else:
-    st.stop()
 
 # メイン表示
 st.title("VSOPライブ情報")
@@ -128,14 +120,12 @@ sort_col = next((c for c in ['曲順', '演奏順'] if c in col_songs), None)
 if not songs_to_display.empty:
     if sort_col: songs_to_display = songs_to_display.sort_values(by=sort_col)
     video_link_base = selected_live_row.get('動画リンク', "")
-    
     html = table_style + "<div class='frame-container'><table class='custom-table'>"
     html += "<tr><th class='no-col'>#</th><th>楽曲</th><th>ボーカル</th><th class='link-cell'>YouTube</th></tr>"
     for i, (_, row) in enumerate(songs_to_display.iterrows(), 1):
         name = row[song_name_col] if pd.notna(row[song_name_col]) else "-"
         vocal = row[vocal_col] if vocal_col and pd.notna(row[vocal_col]) else ""
         t = row[time_col] if time_col and pd.notna(row[time_col]) else 0
-        
         y_url = ""
         if pd.notna(video_link_base) and t != 0:
             try:
@@ -145,30 +135,32 @@ if not songs_to_display.empty:
                 else: s = int(float(t))
                 y_url = f"{video_link_base}{'&' if '?' in str(video_link_base) else '?'}t={s}"
             except: y_url = video_link_base
-        
         l_html = f'<a href="{y_url}" target="_blank">視聴</a>' if y_url else ""
         html += f"<tr><td class='no-col'>{i}</td><td>{name}</td><td>{vocal}</td><td class='link-cell'>{l_html}</td></tr>"
     html += "</table></div>"
     components.html(html, height=min(400, len(songs_to_display) * 50 + 80), scrolling=True)
-else:
-    st.info("演奏曲目データが見つかりませんでした。")
 
 # --- 下段: ライブ感想 ---
 st.markdown("### 💬 ライブ感想")
-# 感想シートの列特定
-# A=ID, B=投稿者, C=日時, D=感想 と想定しつつ柔軟に
-f_text_col = next((c for c in ['感想', '内容', 'コメント'] if c in col_f), col_f[3] if len(col_f) > 3 else None)
-f_author_col = next((c for c in ['投稿者', '名前', '記入者'] if c in col_f), col_f[1] if len(col_f) > 1 else None)
-f_date_col = next((c for c in ['投稿日時', '日時', '日付'] if c in col_f), col_f[2] if len(col_f) > 2 else None)
+# シート構造（スクショより）: A=ライブ番号, B=投稿, C=コメント, D=投稿時間
+if len(col_f) >= 4:
+    f_author_idx = 1 # B: 投稿
+    f_text_idx = 2   # C: コメント
+    f_date_idx = 3   # D: 投稿時間
+else:
+    # 予備の検索ロジック
+    f_author_idx = next((i for i, c in enumerate(col_f) if c in ['投稿', '投稿者', '名前']), 1)
+    f_text_idx = next((i for i, c in enumerate(col_f) if c in ['コメント', '感想', '内容']), 2)
+    f_date_idx = next((i for i, c in enumerate(col_f) if c in ['投稿時間', '投稿日時', '日時']), 3)
 
 if not feedback_to_display.empty:
     html_f = table_style + "<div class='frame-container' style='background-color: #fff9f0;'><table class='custom-table'>"
     html_f += "<tr><th class='no-col'>#</th><th>感想内容</th><th class='author-cell'>投稿者</th><th class='date-cell'>投稿日時</th></tr>"
-    
     for i, (_, row) in enumerate(feedback_to_display.iterrows(), 1):
-        txt = row[f_text_col] if f_text_col and pd.notna(row[f_text_col]) else "-"
-        author = row[f_author_col] if f_author_col and pd.notna(row[f_author_col]) else "匿名"
-        dt = row[f_date_col] if f_date_col and pd.notna(row[f_date_col]) else "-"
+        # 列のインデックスで正確に取得
+        author = row.iloc[f_author_idx] if len(row) > f_author_idx and pd.notna(row.iloc[f_author_idx]) else "匿名"
+        txt = row.iloc[f_text_idx] if len(row) > f_text_idx and pd.notna(row.iloc[f_text_idx]) else "-"
+        dt = row.iloc[f_date_idx] if len(row) > f_date_idx and pd.notna(row.iloc[f_date_idx]) else "-"
         
         html_f += f"<tr><td class='no-col'>{i}</td><td>{txt}</td><td class='author-cell'>{author}</td><td class='date-cell'>{dt}</td></tr>"
     html_f += "</table></div>"
