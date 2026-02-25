@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import streamlit.components.v1 as components
+import re
 
 # ページ設定
 st.set_page_config(page_title="VSOPライブ情報", layout="wide")
@@ -34,12 +35,22 @@ def load_data():
         if not base_url or not str(base_url).startswith("http"):
             return "url_invalid", None
 
+        # Google Sheets のベースURLを抽出（ID部分まで）
+        match = re.search(r"(https://docs\.google\.com/spreadsheets/d/[a-zA-Z0-9_-]+)", str(base_url))
+        if not match:
+            return "url_format_error", None
+        
+        clean_url = match.group(1)
+
+        # シートIDの定義（仕様どおり）
         gid_lives = "0"
         gid_songs = "1476106697"
 
-        lives_url = f"{base_url}/export?format=csv&gid={gid_lives}"
-        songs_url = f"{base_url}/export?format=csv&gid={gid_songs}"
+        # 正確なエクスポートURLを構築
+        lives_url = f"{clean_url}/export?format=csv&gid={gid_lives}"
+        songs_url = f"{clean_url}/export?format=csv&gid={gid_songs}"
 
+        # データ読み込み
         df_lives = pd.read_csv(lives_url, encoding='utf-8')
         df_songs = pd.read_csv(songs_url, encoding='utf-8')
 
@@ -50,17 +61,27 @@ def load_data():
     except Exception as e:
         return str(e), None
 
+# データ読み込み実行
 res_l, res_s = load_data()
 
+# エラー表示
 if isinstance(res_l, str):
     if res_l == "secrets_missing":
         st.error("Secrets 'connections.gsheets' が設定されていません。")
     elif res_l == "url_invalid":
         st.error("Secrets の URL が正しくありません。")
+    elif res_l == "url_format_error":
+        st.error("スプレッドシートURLの形式が解析できませんでした。")
     else:
         st.error(f"データの読み込みに失敗しました: {res_l}")
+        with st.expander("原因の確認とデバッグ"):
+            st.write("アクセスしようとしたURL:")
+            base = st.secrets["connections"]["gsheets"]["spreadsheet"]
+            st.code(f"Base: {base}")
+            st.write("※スプレッドシートが「ウェブに公開」されており、閲覧権限が適切か確認してください。")
     st.stop()
 
+# 型を確定させる
 df_lives: pd.DataFrame = res_l
 df_songs: pd.DataFrame = res_s
 
@@ -80,7 +101,7 @@ with st.sidebar:
         st.stop()
 
     st.markdown("---")
-    st.warning("⚠️ エラーが出る場合はブラウザの「自動翻訳」をオフにしてください。")
+    st.warning("⚠️ ブラウザの自動翻訳（Google 翻訳など）が ON の場合、表示エラーが発生します。必ず OFF にしてください。")
 
 # 結果表示
 if 'ライブID' in df_lives.columns and 'ライブID' in df_songs.columns:
