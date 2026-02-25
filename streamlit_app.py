@@ -9,7 +9,6 @@ st.set_page_config(page_title="VSOPライブ情報", layout="wide")
 # 強制的に翻訳を無効化するスクリプトとスタイル
 st.markdown("""
     <script>
-        // ボディ全体に notranslate クラスを付与し、翻訳属性を拒否
         document.body.classList.add('notranslate');
         document.body.setAttribute('translate', 'no');
     </script>
@@ -17,7 +16,6 @@ st.markdown("""
     .stApp {
         background-color: #f8f9fa;
     }
-    /* Streamlit固有の要素にも翻訳拒否を適用 */
     div[data-testid="stSidebar"], div[data-testid="stMain"] {
         translate: no !important;
     }
@@ -42,17 +40,26 @@ def load_data():
         
         clean_url = match.group(1)
 
-        # シートIDの定義（仕様どおり）
+        # シートIDの定義
+        # 仕様: ライブ情報=0, 演奏曲目=1476106697
         gid_lives = "0"
-        gid_songs = "1476106697"
+        gid_songs = "1476106697" 
 
-        # 正確なエクスポートURLを構築
-        lives_url = f"{clean_url}/export?format=csv&gid={gid_lives}"
-        songs_url = f"{clean_url}/export?format=csv&gid={gid_songs}"
+        # URL構築 (gviz 方式: より安定している場合が多い)
+        lives_url = f"{clean_url}/gviz/tq?tqx=out:csv&gid={gid_lives}"
+        songs_url = f"{clean_url}/gviz/tq?tqx=out:csv&gid={gid_songs}"
 
         # データ読み込み
-        df_lives = pd.read_csv(lives_url, encoding='utf-8')
-        df_songs = pd.read_csv(songs_url, encoding='utf-8')
+        # 400エラーが出た場合、どちらのシートで失敗したか特定できるように個別に試行
+        try:
+            df_lives = pd.read_csv(lives_url, encoding='utf-8')
+        except Exception as e:
+            return f"ライブ情報シート(gid={gid_lives})の読み込みに失敗しました: {e}", None
+
+        try:
+            df_songs = pd.read_csv(songs_url, encoding='utf-8')
+        except Exception as e:
+            return f"演奏曲目シート(gid={gid_songs})の読み込みに失敗しました: {e}", None
 
         df_lives.columns = df_lives.columns.str.strip()
         df_songs.columns = df_songs.columns.str.strip()
@@ -71,14 +78,17 @@ if isinstance(res_l, str):
     elif res_l == "url_invalid":
         st.error("Secrets の URL が正しくありません。")
     elif res_l == "url_format_error":
-        st.error("スプレッドシートURLの形式が解析できませんでした。")
+        st.error("URLの形式が解析できませんでした。")
     else:
-        st.error(f"データの読み込みに失敗しました: {res_l}")
-        with st.expander("原因の確認とデバッグ"):
-            st.write("アクセスしようとしたURL:")
+        st.error(res_l) # ここに具体的な失敗シート情報が入る
+        with st.expander("デバッグ情報"):
+            st.write("アクセスに使用したクリーンURL:")
             base = st.secrets["connections"]["gsheets"]["spreadsheet"]
-            st.code(f"Base: {base}")
-            st.write("※スプレッドシートが「ウェブに公開」されており、閲覧権限が適切か確認してください。")
+            st.code(f"Original: {base}")
+            match = re.search(r"(https://docs\.google\.com/spreadsheets/d/[a-zA-Z0-9_-]+)", str(base))
+            if match:
+                st.code(f"Clean: {match.group(1)}")
+            st.write("※gid(シートID)が正しいか、またはシートが「リンクを知っている全員」に公開されているか再度ご確認ください。")
     st.stop()
 
 # 型を確定させる
@@ -97,11 +107,11 @@ with st.sidebar:
         selected_live_display = st.selectbox("ライブを選択してください", live_list)
         selected_live_row = df_lives[df_lives['display_name'] == selected_live_display].iloc[0]
     else:
-        st.error("シート構造が正しくありません。")
+        st.error("シートに必要な列（日付、ライブ名）がありません。")
         st.stop()
 
     st.markdown("---")
-    st.warning("⚠️ ブラウザの自動翻訳（Google 翻訳など）が ON の場合、表示エラーが発生します。必ず OFF にしてください。")
+    st.warning("⚠️ エラーが出る場合は自動翻訳をオフにしてください。")
 
 # 結果表示
 if 'ライブID' in df_lives.columns and 'ライブID' in df_songs.columns:
@@ -116,23 +126,32 @@ st.subheader(f"演奏曲目: {selected_live_display}")
 if '曲順' in songs_to_display.columns:
     songs_to_display = songs_to_display.sort_values(by='曲順')
 
-# 曲リストの生成（HTML iframeを使用してReactの干渉を避ける）
+# 曲リストの生成
 video_link_base = selected_live_row.get('動画リンク', "")
-required_cols = ['楽曲名', 'ボーカル', 'STARTTIME']
 
-if all(col in songs_to_display.columns for col in required_cols):
-    content_html = """
-    <div style="font-family: sans-serif; line-height: 2.0; color: #31333F;">
-    """
+# 列名正規化（仕様と実態のズレを吸収）
+# STARTTIME がない場合に TIME を代用
+col_songs = songs_to_display.columns.tolist()
+name_col = '楽曲名' if '楽曲名' in col_songs else '曲名'
+vocal_col = 'ボーカル' if 'ボーカル' in col_songs else 'Vocal'
+time_col = 'STARTTIME' if 'STARTTIME' in col_songs else ('TIME' if 'TIME' in col_songs else None)
+
+if name_col in col_songs and vocal_col in col_songs:
+    content_html = '<div style="font-family: sans-serif; line-height: 2.0; color: #31333F;">'
     for _, song in songs_to_display.iterrows():
-        song_name = song['楽曲名']
-        vocal = song['ボーカル']
-        starttime = song['STARTTIME']
+        song_name = song[name_col]
+        vocal = song[vocal_col]
+        starttime = song[time_col] if time_col else 0
         
         youtube_link = ""
         if pd.notna(video_link_base) and pd.notna(starttime):
             try:
-                seconds = int(starttime)
+                # 00:00:00 形式などの場合は秒数に変換する必要があるが、一旦数値と仮定
+                if isinstance(starttime, str) and ":" in starttime:
+                    parts = starttime.split(':')
+                    seconds = int(parts[-1]) + int(parts[-2]) * 60 + (int(parts[-3]) * 3600 if len(parts) > 2 else 0)
+                else:
+                    seconds = int(float(starttime))
                 connector = "&" if "?" in str(video_link_base) else "?"
                 youtube_link = f"{video_link_base}{connector}t={seconds}"
             except:
@@ -142,9 +161,7 @@ if all(col in songs_to_display.columns for col in required_cols):
         content_html += f'<div style="border-bottom: 1px solid #eee; padding: 5px 0;">{song_name} {vocal} {link_tag}</div>'
     
     content_html += '</div>'
-    
-    # iframeとしてレンダリング（高さは曲数に応じて調整）
     height = max(400, len(songs_to_display) * 45)
     components.html(content_html, height=height, scrolling=True)
 else:
-    st.error("必要な列が欠落しています。")
+    st.error(f"必要な列が見つかりません。 (確認できた列: {', '.join(col_songs)})")
