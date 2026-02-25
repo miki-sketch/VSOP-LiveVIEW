@@ -65,8 +65,8 @@ def load_data():
         return str(e), None, None
 
 def call_gas_api(action, payload):
-    # 新しい GAS Web App URL
-    gas_url = "https://script.google.com/macros/s/AKfycbx8neK1gIiEpndyKK6s2YaatnYLHZItp-ywCO9oNfsTGpOH11XFXyzCz52lBBhdwVGt/exec"
+    # 最新の堅牢版 GAS Web App URL
+    gas_url = "https://script.google.com/macros/s/AKfycbyoVXp7Au4e-oDHIm5w-4lo0dAqFWD09-fwMnj--m8pR3lobVdLsFclDy13Lf1TeOLg/exec"
     
     payload['action'] = action
     try:
@@ -189,7 +189,7 @@ if st.session_state.mode == 'view':
                                     st.cache_data.clear()
                                     st.rerun()
                                 else:
-                                    st.error("キー不一致")
+                                    st.error(f"削除失敗: {res}")
     else:
         st.info("感想未登録")
 
