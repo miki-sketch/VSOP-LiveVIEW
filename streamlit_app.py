@@ -29,8 +29,6 @@ def load_data():
         if not match: return "url_format_error", None
         clean_url = match.group(1)
 
-        # シートIDの定義
-        # 仕様: ライブ情報=0, 演奏曲目=1268681059 (URL内の数字を優先)
         gid_lives = "0"
         gid_songs = "1268681059" 
 
@@ -56,19 +54,15 @@ df_lives, df_songs = res_l, res_s
 # 列名の特定
 col_lives, col_songs = df_lives.columns.tolist(), df_songs.columns.tolist()
 
-# ユーザー要望: ライブ番号で紐付け
 id_col_lives = next((c for c in ['ライブ番号', 'ライブID'] if c in col_lives), col_lives[0] if col_lives else None)
 id_col_songs = next((c for c in ['ライブ番号', 'ライブID'] if c in col_songs), None)
 
-# 表示に使用する列
 date_col = next((c for c in ['日付', '開催日'] if c in col_lives), None)
 live_name_col = next((c for c in ['ライブ名', '名称'] if c in col_lives), None)
 
-# 曲リスト用の列
-# 1列目に名前がない場合(Unnamed)があるため、それも候補に入れる
 song_name_col = next((c for c in ['楽曲名', '曲名', '曲'] if c in col_songs), None)
 if not song_name_col and len(col_songs) > 0:
-    song_name_col = col_songs[0] # フォールバック: 最初の列
+    song_name_col = col_songs[0]
 
 vocal_col = next((c for c in ['ボーカル', 'Vocal'] if c in col_songs), None)
 time_col = next((c for c in ['STARTTIME', 'TIME'] if c in col_songs), None)
@@ -86,8 +80,8 @@ with st.sidebar:
         st.stop()
 
     with st.expander("🛠 デバッグ情報"):
-        st.write("▼演奏曲目（先頭3行）", df_songs.head(3))
         st.write("特定された列:", {"紐付けID": id_col_songs, "曲名": song_name_col, "ボーカル": vocal_col})
+        st.dataframe(df_songs.head(3))
 
 # データの抽出
 if id_col_lives and id_col_songs:
@@ -98,7 +92,7 @@ else:
     st.stop()
 
 st.title("VSOPライブ情報")
-st.subheader(f"演奏曲目: {selected_live_display}")
+st.subheader(f"セットリスト: {selected_live_display}")
 
 if songs_to_display.empty:
     st.info(f"このライブに該当する曲が見つかりませんでした。 (ライブ番号: {live_id_val})")
@@ -107,13 +101,29 @@ if songs_to_display.empty:
 if sort_col:
     songs_to_display = songs_to_display.sort_values(by=sort_col)
 
-# リスト作成
+# リスト作成（テーブル形式）
 video_link_base = selected_live_row.get('動画リンク', "")
-if song_name_col and vocal_col:
-    content_html = '<div style="font-family: sans-serif; line-height: 2.0;">'
-    for _, song in songs_to_display.iterrows():
+if song_name_col:
+    # テーブルのHTML構築
+    table_style = """
+    <style>
+        table { width: 100%; border-collapse: collapse; font-family: sans-serif; color: #31333F; }
+        th { background-color: #f0f2f6; text-align: left; padding: 12px; border-bottom: 2px solid #dee2e6; }
+        td { padding: 10px 12px; border-bottom: 1px solid #eee; }
+        tr:hover { background-color: #f8f9fa; }
+        .no-col { width: 40px; color: #888; text-align: center; }
+        .link-cell { word-break: break-all; }
+        a { color: #0068c9; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+    """
+    
+    content_html = table_style + "<table>"
+    content_html += "<tr><th class='no-col'>#</th><th>楽曲</th><th>ボーカル</th><th class='link-cell'>Youtubeリンク</th></tr>"
+    
+    for i, (_, song) in enumerate(songs_to_display.iterrows(), 1):
         s_name = song[song_name_col] if pd.notna(song[song_name_col]) else "(untitled)"
-        s_vocal = song[vocal_col] if pd.notna(song[vocal_col]) else ""
+        s_vocal = song[vocal_col] if vocal_col and pd.notna(song[vocal_col]) else ""
         s_time = song[time_col] if time_col and pd.notna(song[time_col]) else 0
         
         y_link = ""
@@ -126,9 +136,10 @@ if song_name_col and vocal_col:
                 y_link = f"{video_link_base}{'&' if '?' in str(video_link_base) else '?'}t={sec}"
             except: y_link = video_link_base
 
-        link_html = f'<a href="{y_link}" target="_blank" style="color: #0068c9; text-decoration: none;">{y_link}</a>' if y_link else ""
-        content_html += f'<div style="border-bottom: 1px solid #eee; padding: 5px 0;">{s_name} {s_vocal} {link_html}</div>'
-    content_html += '</div>'
-    components.html(content_html, height=max(400, len(songs_to_display) * 45), scrolling=True)
+        link_html = f'<a href="{y_link}" target="_blank">{y_link}</a>' if y_link else ""
+        content_html += f"<tr><td class='no-col'>{i}</td><td>{s_name}</td><td>{s_vocal}</td><td class='link-cell'>{link_html}</td></tr>"
+    
+    content_html += "</table>"
+    components.html(content_html, height=max(500, len(songs_to_display) * 60), scrolling=True)
 else:
-    st.error("表示に必要な列（曲名、ボーカル）が見つかりませんでした。")
+    st.error("表示に必要な列が見つかりませんでした。")
