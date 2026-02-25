@@ -13,8 +13,16 @@ st.markdown("""
         document.body.setAttribute('translate', 'no');
     </script>
     <style>
-    .stApp { background-color: #f8f9fa; }
+    .stApp { background-color: #f0f2f6; } /* 全体の背景を少しグレーに */
     div[data-testid="stSidebar"], div[data-testid="stMain"] { translate: no !important; }
+    /* メインコンテンツエリアの背景 */
+    .block-container {
+        background-color: #ffffff;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        margin-top: 1rem;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -29,7 +37,6 @@ def load_data():
         if not match: return "url_format_error", None, None
         clean_url = match.group(1)
 
-        # シートIDの定義
         gid_lives = "0"
         gid_songs = "1268681059" 
         gid_feedback = "591211524"
@@ -69,12 +76,15 @@ live_name_col = next((c for c in ['ライブ名', '名称'] if c in col_lives), 
 # 共通スタイルの定義
 table_style = """
 <style>
-    .custom-table { width: 100%; border-collapse: collapse; font-family: sans-serif; color: #31333F; margin-bottom: 20px; }
-    .custom-table th { background-color: #f0f2f6; text-align: left; padding: 12px; border-bottom: 2px solid #dee2e6; }
-    .custom-table td { padding: 10px 12px; border-bottom: 1px solid #eee; }
-    .custom-table tr:hover { background-color: #f8f9fa; }
-    .no-col { width: 40px; color: #888; text-align: center; }
+    .frame-container { background-color: #fdfdfd; padding: 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 20px; }
+    .custom-table { width: 100%; border-collapse: collapse; font-family: sans-serif; color: #31333F; }
+    .custom-table th { background-color: #f1f3f9; text-align: left; padding: 12px; border-bottom: 2px solid #ddd; font-size: 14px; }
+    .custom-table td { padding: 10px 12px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: top; }
+    .custom-table tr:hover { background-color: #f9fbff; }
+    .no-col { width: 30px; color: #999; text-align: center; }
     .link-cell { word-break: break-all; }
+    .author-cell { width: 120px; font-weight: bold; }
+    .date-cell { width: 150px; color: #666; font-size: 12px; }
     a { color: #0068c9; text-decoration: none; }
     a:hover { text-decoration: underline; }
 </style>
@@ -82,30 +92,26 @@ table_style = """
 
 # サイドバー
 with st.sidebar:
-    st.header("検索・選択")
+    st.header("🔍 検索・選択")
     if date_col and live_name_col:
         df_lives['display_name'] = df_lives[date_col].astype(str) + " " + df_lives[live_name_col].astype(str)
         selected_live_display = st.selectbox("ライブを選択してください", df_lives['display_name'].tolist())
         selected_live_row = df_lives[df_lives['display_name'] == selected_live_display].iloc[0]
     else:
-        st.error("ライブ情報の列が見つかりません。")
+        st.error("必要な列が見つかりません。")
         st.stop()
 
     st.markdown("---")
     st.warning("⚠️ 翻訳をオフにしてください。")
     with st.expander("🛠 デバッグ情報"):
-        st.write("Lives ID:", id_col_lives)
         st.write("Feedback 列:", col_f)
 
 # ID取得と抽出
 if id_col_lives:
     live_id_val = selected_live_row[id_col_lives]
-    # セットリスト抽出
     songs_to_display = df_songs[df_songs[id_col_songs].astype(str) == str(live_id_val)].copy() if id_col_songs else pd.DataFrame()
-    # 感想抽出
     feedback_to_display = df_feedback[df_feedback[id_col_f].astype(str) == str(live_id_val)].copy() if id_col_f else pd.DataFrame()
 else:
-    st.error("紐付けIDが見つかりません。")
     st.stop()
 
 # メイン表示
@@ -123,10 +129,10 @@ if not songs_to_display.empty:
     if sort_col: songs_to_display = songs_to_display.sort_values(by=sort_col)
     video_link_base = selected_live_row.get('動画リンク', "")
     
-    html = table_style + "<table class='custom-table'>"
-    html += "<tr><th class='no-col'>#</th><th>楽曲</th><th>ボーカル</th><th class='link-cell'>Youtubeリンク</th></tr>"
+    html = table_style + "<div class='frame-container'><table class='custom-table'>"
+    html += "<tr><th class='no-col'>#</th><th>楽曲</th><th>ボーカル</th><th class='link-cell'>YouTube</th></tr>"
     for i, (_, row) in enumerate(songs_to_display.iterrows(), 1):
-        name = row[song_name_col] if pd.notna(row[song_name_col]) else "(untitled)"
+        name = row[song_name_col] if pd.notna(row[song_name_col]) else "-"
         vocal = row[vocal_col] if vocal_col and pd.notna(row[vocal_col]) else ""
         t = row[time_col] if time_col and pd.notna(row[time_col]) else 0
         
@@ -140,34 +146,32 @@ if not songs_to_display.empty:
                 y_url = f"{video_link_base}{'&' if '?' in str(video_link_base) else '?'}t={s}"
             except: y_url = video_link_base
         
-        l_html = f'<a href="{y_url}" target="_blank">{y_url}</a>' if y_url else ""
+        l_html = f'<a href="{y_url}" target="_blank">視聴</a>' if y_url else ""
         html += f"<tr><td class='no-col'>{i}</td><td>{name}</td><td>{vocal}</td><td class='link-cell'>{l_html}</td></tr>"
-    html += "</table>"
-    components.html(html, height=min(400, len(songs_to_display) * 55 + 60), scrolling=True)
+    html += "</table></div>"
+    components.html(html, height=min(400, len(songs_to_display) * 50 + 80), scrolling=True)
 else:
     st.info("演奏曲目データが見つかりませんでした。")
 
 # --- 下段: ライブ感想 ---
 st.markdown("### 💬 ライブ感想")
-# 感想シートの列特定（柔軟に）
-f_text_col = next((c for c in ['感想', '内容', 'コメント', 'Feedback'] if c in col_f), None)
-f_author_col = next((c for c in ['名前', '記入者', 'Author'] if c in col_f), None)
+# 感想シートの列特定
+# A=ID, B=投稿者, C=日時, D=感想 と想定しつつ柔軟に
+f_text_col = next((c for c in ['感想', '内容', 'コメント'] if c in col_f), col_f[3] if len(col_f) > 3 else None)
+f_author_col = next((c for c in ['投稿者', '名前', '記入者'] if c in col_f), col_f[1] if len(col_f) > 1 else None)
+f_date_col = next((c for c in ['投稿日時', '日時', '日付'] if c in col_f), col_f[2] if len(col_f) > 2 else None)
 
 if not feedback_to_display.empty:
-    html_f = table_style + "<table class='custom-table'>"
-    # ヘッダー構成（名前列があれば出す、なければ感想のみ）
-    headers = ["#"]
-    if f_author_col: headers.append("お名前")
-    headers.append("感想内容")
-    html_f += "<tr>" + "".join(f"<th>{h}</th>" for h in headers) + "</tr>"
+    html_f = table_style + "<div class='frame-container' style='background-color: #fff9f0;'><table class='custom-table'>"
+    html_f += "<tr><th class='no-col'>#</th><th>感想内容</th><th class='author-cell'>投稿者</th><th class='date-cell'>投稿日時</th></tr>"
     
     for i, (_, row) in enumerate(feedback_to_display.iterrows(), 1):
-        txt = row[f_text_col] if f_text_col and pd.notna(row[f_text_col]) else ""
-        author = row[f_author_col] if f_author_col and pd.notna(row[f_author_col]) else ""
-        html_f += f"<tr><td class='no-col'>{i}</td>"
-        if f_author_col: html_f += f"<td>{author}</td>"
-        html_f += f"<td>{txt}</td></tr>"
-    html_f += "</table>"
-    components.html(html_f, height=250, scrolling=True)
+        txt = row[f_text_col] if f_text_col and pd.notna(row[f_text_col]) else "-"
+        author = row[f_author_col] if f_author_col and pd.notna(row[f_author_col]) else "匿名"
+        dt = row[f_date_col] if f_date_col and pd.notna(row[f_date_col]) else "-"
+        
+        html_f += f"<tr><td class='no-col'>{i}</td><td>{txt}</td><td class='author-cell'>{author}</td><td class='date-cell'>{dt}</td></tr>"
+    html_f += "</table></div>"
+    components.html(html_f, height=300, scrolling=True)
 else:
     st.info("感想未登録")
