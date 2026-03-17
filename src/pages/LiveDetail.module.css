@@ -1,0 +1,420 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.notFound {
+  color: var(--sub);
+  text-align: center;
+  padding: 40px;
+}
+
+/* Info Card */
+.infoCard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px;
+}
+
+.infoTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.infoDate {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px;
+  letter-spacing: 1px;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+
+.infoTime {
+  font-size: 14px;
+  color: var(--sub);
+}
+
+.liveName {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.upcomingBadge {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  background: var(--gold);
+  color: #0a0a0a;
+  padding: 3px 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.infoMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.metaItem {
+  font-size: 13px;
+  color: var(--sub);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.metaIcon {
+  font-size: 14px;
+}
+
+.note {
+  font-size: 13px;
+  color: var(--sub);
+  font-style: italic;
+  margin-bottom: 14px;
+  padding: 8px 12px;
+  border-left: 2px solid var(--gold);
+  background: var(--gold-dim);
+  border-radius: 0 4px 4px 0;
+}
+
+.videoBtn {
+  display: inline-block;
+  background: var(--gold);
+  color: #0a0a0a;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 8px 20px;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.videoBtn:hover {
+  opacity: 0.85;
+  text-decoration: none;
+}
+
+/* Section */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionTitle {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 3px;
+  color: var(--gold);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
+.placeholder {
+  color: var(--sub);
+  font-size: 14px;
+  padding: 12px 0;
+}
+
+/* Setlist */
+.setlistTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.setlistTable th {
+  text-align: left;
+  color: var(--sub);
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 500;
+}
+
+.setlistTable td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.setlistTable tr:last-child td {
+  border-bottom: none;
+}
+
+.setlistTable tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.orderCell {
+  color: var(--sub);
+  font-size: 12px;
+  width: 40px;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 1px;
+}
+
+.songName {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.vocalist {
+  color: var(--sub);
+  font-size: 13px;
+}
+
+.watchBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--gold-dim);
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  border-radius: 4px;
+  color: var(--gold);
+  font-size: 11px;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.watchBtn:hover {
+  background: var(--gold);
+  color: #0a0a0a;
+  text-decoration: none;
+}
+
+/* Reviews */
+.reviewItem {
+  display: block;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.reviewHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.reviewAuthor {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--gold);
+}
+
+.reviewDate {
+  font-size: 12px;
+  color: var(--sub);
+  flex: 1;
+}
+
+.deleteBtn {
+  background: none;
+  border: 1px solid rgba(224, 92, 92, 0.3);
+  color: #e05c5c;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.deleteBtn:hover {
+  background: rgba(224, 92, 92, 0.1);
+}
+
+.reviewText {
+  display: block;
+  font-size: 14px;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.7;
+  margin-top: 8px;
+}
+
+.toggleFormBtn {
+  align-self: flex-start;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--sub);
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.toggleFormBtn:hover {
+  color: var(--text);
+  border-color: var(--gold);
+}
+
+/* Form */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formField label {
+  font-size: 12px;
+  color: var(--sub);
+  letter-spacing: 0.5px;
+}
+
+.formField input,
+.formField textarea {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 14px;
+  padding: 10px 12px;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.15s;
+}
+
+.formField input:focus,
+.formField textarea:focus {
+  border-color: rgba(201, 168, 76, 0.5);
+}
+
+.formError {
+  font-size: 13px;
+  color: var(--danger);
+}
+
+.submitBtn {
+  align-self: flex-end;
+  background: var(--gold);
+  border: none;
+  color: #0a0a0a;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 24px;
+  border-radius: 4px;
+  transition: opacity 0.15s;
+}
+
+.submitBtn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Modal */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+}
+
+.modal {
+  background: #1a1a1a;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 28px;
+  max-width: 360px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modal h3 {
+  font-size: 18px;
+  color: var(--text);
+}
+
+.modal p {
+  font-size: 14px;
+  color: var(--sub);
+}
+
+.modal input {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 14px;
+  padding: 10px 12px;
+  outline: none;
+  width: 100%;
+}
+
+.modal input:focus {
+  border-color: rgba(201, 168, 76, 0.5);
+}
+
+.modalActions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.cancelBtn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--sub);
+  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 4px;
+}
+
+.cancelBtn:hover {
+  color: var(--text);
+}
+
+.confirmDeleteBtn {
+  background: var(--danger);
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: opacity 0.15s;
+}
+
+.confirmDeleteBtn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.confirmDeleteBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

@@ -1,0 +1,104 @@
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(10, 10, 10, 0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 60px;
+  gap: 16px;
+}
+
+.logo {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.logoMain {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  color: var(--gold);
+  letter-spacing: 2px;
+}
+
+.logoSub {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px;
+  color: var(--sub);
+  letter-spacing: 3px;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tab {
+  background: none;
+  border: none;
+  color: var(--sub);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  padding: 6px 16px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.tab:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tabActive {
+  color: var(--gold);
+  background: var(--gold-dim);
+}
+
+.backBtn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--sub);
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 4px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.backBtn:hover {
+  color: var(--text);
+  border-color: var(--gold);
+}
+
+.main {
+  flex: 1;
+  padding: 24px 16px;
+  max-width: 860px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.statusMsg {
+  color: var(--sub);
+  text-align: center;
+  padding: 60px 0;
+}
+
+.errorMsg {
+  color: var(--danger);
+  text-align: center;
+  padding: 60px 0;
+}
