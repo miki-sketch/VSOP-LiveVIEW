@@ -1,10 +1,21 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { buildVideoUrl } from '../utils/csv';
+import { sendLog } from '../utils/logger';
 import styles from './SongSearch.module.css';
 
 export default function SongSearch({ songs, lives }) {
   const [query, setQuery] = useState('');
   const [mobileView, setMobileView] = useState('list'); // 'list' | 'detail'
+  const searchTimer = useRef(null);
+
+  useEffect(() => {
+    if (!query.trim()) return;
+    clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => {
+      sendLog('search', { keyword: query.trim() });
+    }, 500);
+    return () => clearTimeout(searchTimer.current);
+  }, [query]);
 
   const liveMap = useMemo(() => {
     const m = {};
@@ -161,6 +172,7 @@ function HistoryPane({ songName, entries, liveMap }) {
                   href={videoUrl || live['動画リンク']}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => sendLog('play', { songName, liveName: live['ライブ名'] })}
                 >
                   ▶
                 </a>

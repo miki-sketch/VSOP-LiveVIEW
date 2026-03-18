@@ -4,6 +4,7 @@ import { GIDS } from './config';
 import LiveList from './pages/LiveList';
 import LiveDetail from './pages/LiveDetail';
 import SongSearch from './pages/SongSearch';
+import { sendLog } from './utils/logger';
 import styles from './App.module.css';
 
 export default function App() {
@@ -69,13 +70,13 @@ export default function App() {
             <>
               <button
                 className={`${styles.tab} ${tab === 'lives' ? styles.tabActive : ''}`}
-                onClick={() => setTab('lives')}
+                onClick={() => { setTab('lives'); sendLog('access', { page: 'LiveList' }); }}
               >
                 LIVE一覧
               </button>
               <button
                 className={`${styles.tab} ${tab === 'songs' ? styles.tabActive : ''}`}
-                onClick={() => setTab('songs')}
+                onClick={() => { setTab('songs'); sendLog('access', { page: 'SongSearch' }); }}
               >
                 曲目検索
               </button>

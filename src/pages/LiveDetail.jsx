@@ -1,10 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { buildVideoUrl } from '../utils/csv';
 import { GAS_URL } from '../config';
+import { sendLog } from '../utils/logger';
 import styles from './LiveDetail.module.css';
 
 export default function LiveDetail({ liveNo, lives, songs, reviews, onReviewsChange }) {
   const live = lives.find((l) => l['ライブ番号'] === liveNo);
+
+  useEffect(() => {
+    if (live) {
+      sendLog('access', { page: 'LiveDetail', liveName: live['ライブ名'] });
+    }
+  }, [liveNo]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!live) return <p className={styles.notFound}>ライブが見つかりません。</p>;
 
   const isUpcoming = live['STATUS'] !== '済';
@@ -128,6 +136,7 @@ function SetlistSection({ live, songs, isUpcoming }) {
                         href={videoUrl || live['動画リンク']}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => sendLog('play', { songName: song['楽曲名'], liveName: live['ライブ名'] })}
                       >
                         ▶
                       </a>
