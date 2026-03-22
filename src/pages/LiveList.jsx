@@ -4,7 +4,7 @@ export default function LiveList({ lives, onSelect }) {
   const upcoming = lives.filter((l) => l['STATUS'] !== '済');
   const done = lives
     .filter((l) => l['STATUS'] === '済')
-    .sort((a, b) => (a['日付'] < b['日付'] ? 1 : -1));
+    .sort((a, b) => new Date(b['日付'].replace(/\//g, '-')) - new Date(a['日付'].replace(/\//g, '-')));
 
   return (
     <div className={styles.container}>
