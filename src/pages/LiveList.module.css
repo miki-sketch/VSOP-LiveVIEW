@@ -1,8 +1,91 @@
+/* ── カスタムスクロールバー（position: fixed） ── */
+/*
+  2列構成: 左列36px（年バッジ） + 右列28px（つまみ） = 64px
+  右端 = 50vw - 360px（コンテンツとの重なりは 54px → padding-left: 56px で吸収）
+*/
+
+.scrollbarTrack {
+  position: fixed;
+  top: 60px;
+  left: max(0px, calc(50vw - 360px - 64px));
+  width: 64px;
+  height: calc(100vh - 120px);
+  z-index: 50;
+  pointer-events: none;
+}
+
+/* 縦線: 右列（36px〜64px）の中央 = 36 + 14 = 50px */
+.scrollbarLine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50px;
+  width: 1px;
+  background: rgba(201, 168, 76, 0.3);
+}
+
+/* 年バッジ: 左列（0〜36px）に固定位置で複数表示 */
+.yearBadge {
+  position: absolute;
+  left: 0;
+  width: 36px;
+  padding: 3px 0;
+  background: #c9a84c;
+  border-radius: 3px;
+  color: #0a0a0a;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 11px;
+  text-align: center;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  transform-origin: left center;
+  transition: transform 0.2s ease, font-size 0.2s ease;
+}
+
+/* アクティブ年バッジ: 矢印が指している年号を強調 */
+.yearBadgeActive {
+  transform: scale(1.3);
+  font-size: 13px;
+}
+
+/* スクロールつまみ: 右列（36px〜64px）内に左向き三角形 */
+/* 右列中央に配置: 36 + (28 - 22) / 2 = 39px */
+.scrollbarThumb {
+  position: absolute;
+  left: 39px;
+  width: 22px;
+  height: 22px;
+  background: #c0392b;
+  clip-path: polygon(100% 0%, 0% 50%, 100% 100%);
+  cursor: grab;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.scrollbarThumb:hover {
+  background: #e74c3c;
+}
+
+.dragging {
+  cursor: grabbing;
+  background: #c0392b;
+}
+
+/* ── コンテンツレイアウト ── */
+
+/*
+  バー右端 = (50vw - 360px - 52px) + 52px = 50vw - 360px（幅変更後も同じ）
+  コンテンツ左端 = 50vw - 414px（max-width:860px + padding:16px）
+  食い込み = 54px → padding-left: 56px で2pxの余白を確保
+*/
 .container {
   display: flex;
   flex-direction: column;
   gap: 32px;
+  padding-left: 56px;
 }
+
+/* ── セクション ── */
 
 .section {
   display: flex;
@@ -19,6 +102,8 @@
   padding-bottom: 8px;
   margin-bottom: 4px;
 }
+
+/* ── カード ── */
 
 .card {
   background: var(--card);
@@ -126,4 +211,45 @@
 
 .sep {
   color: rgba(154, 149, 144, 0.4);
+}
+
+/* ── スマホ（768px未満） ── */
+
+@media (max-width: 768px) {
+  /* 2列構成: 左列20px（バッジ） + 右列16px（つまみ） = 36px */
+  .scrollbarTrack {
+    width: 36px;
+    left: max(0px, calc(50vw - 360px - 36px));
+  }
+
+  /* 縦線: 右列（20px〜36px）中央 = 20 + 8 = 28px */
+  .scrollbarLine {
+    left: 28px;
+  }
+
+  .yearBadge {
+    width: 20px;
+    font-size: 9px;
+    padding: 2px 0;
+  }
+
+  .yearBadgeActive {
+    font-size: 10px;
+  }
+
+  /* つまみ: 右列（20px〜36px）内に 16px 幅で配置 */
+  .scrollbarThumb {
+    left: 20px;
+    width: 16px;
+    height: 16px;
+  }
+
+  /*
+    バー右端 = 36px（left: 0）
+    .main padding-left: 16px → 重なり 20px
+    追加 padding-left: 24px で合計 40px > 36px
+  */
+  .container {
+    padding-left: 24px;
+  }
 }
