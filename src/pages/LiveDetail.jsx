@@ -4,7 +4,7 @@ import { GAS_URL } from '../config';
 import { sendLog } from '../utils/logger';
 import styles from './LiveDetail.module.css';
 
-export default function LiveDetail({ liveNo, lives, songs, reviews, onReviewsChange }) {
+export default function LiveDetail({ liveNo, lives, songs, reviews, photos, onReviewsChange, onAlbum }) {
   const live = lives.find((l) => l['ライブ番号'] === liveNo);
 
   useEffect(() => {
@@ -25,10 +25,11 @@ export default function LiveDetail({ liveNo, lives, songs, reviews, onReviewsCha
       return Number(a['曲順']) - Number(b['曲順']);
     });
   const liveReviews = reviews.filter((r) => r['ライブ番号'] === liveNo);
+  const photoCount = photos ? photos.filter((p) => p['ライブ番号'] === liveNo).length : 0;
 
   return (
     <div className={styles.container}>
-      <LiveInfo live={live} isUpcoming={isUpcoming} />
+      <LiveInfo live={live} isUpcoming={isUpcoming} photoCount={photoCount} onAlbum={() => onAlbum(liveNo)} />
       <SetlistSection
         live={live}
         songs={liveSongs}
@@ -45,7 +46,7 @@ export default function LiveDetail({ liveNo, lives, songs, reviews, onReviewsCha
   );
 }
 
-function LiveInfo({ live, isUpcoming }) {
+function LiveInfo({ live, isUpcoming, photoCount, onAlbum }) {
   return (
     <div className={styles.infoCard}>
       <div className={styles.infoTop}>
@@ -87,16 +88,23 @@ function LiveInfo({ live, isUpcoming }) {
         <p className={styles.note}>{live['特記事項']}</p>
       )}
 
-      {live['動画リンク'] && (
-        <a
-          className={styles.videoBtn}
-          href={live['動画リンク']}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          ▶ 動画を見る
-        </a>
-      )}
+      <div className={styles.infoBtns}>
+        {live['動画リンク'] && (
+          <a
+            className={styles.videoBtn}
+            href={live['動画リンク']}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            ▶ 動画を見る
+          </a>
+        )}
+        {photoCount > 0 && (
+          <button className={styles.albumBtn} onClick={onAlbum}>
+            📷 アルバムを見る（{photoCount}枚）
+          </button>
+        )}
+      </div>
     </div>
   );
 }

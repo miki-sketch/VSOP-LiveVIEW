@@ -87,6 +87,13 @@
   border-radius: 0 4px 4px 0;
 }
 
+.infoBtns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
 .videoBtn {
   display: inline-block;
   background: var(--gold);
@@ -102,6 +109,22 @@
 .videoBtn:hover {
   opacity: 0.85;
   text-decoration: none;
+}
+
+.albumBtn {
+  display: inline-block;
+  background: none;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 20px;
+  border-radius: 4px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.albumBtn:hover {
+  background: var(--gold-dim);
 }
 
 /* Section */

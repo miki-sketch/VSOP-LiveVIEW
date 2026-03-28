@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import styles from './LiveList.module.css';
 
-export default function LiveList({ lives, onSelect }) {
+export default function LiveList({ lives, photos, onSelect, onAlbum }) {
   const upcoming = lives.filter((l) => l['STATUS'] !== '済');
   const done = lives
     .filter((l) => l['STATUS'] === '済')
@@ -16,7 +16,7 @@ export default function LiveList({ lives, onSelect }) {
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>UPCOMING</h2>
             {upcoming.map((live) => (
-              <LiveCard key={live['ライブ番号']} live={live} onSelect={onSelect} />
+              <LiveCard key={live['ライブ番号']} live={live} photos={photos} onSelect={onSelect} onAlbum={onAlbum} />
             ))}
           </section>
         )}
@@ -26,7 +26,7 @@ export default function LiveList({ lives, onSelect }) {
             <h2 className={styles.sectionTitle}>PAST LIVES</h2>
           )}
           {done.map((live) => (
-            <LiveCard key={live['ライブ番号']} live={live} onSelect={onSelect} />
+            <LiveCard key={live['ライブ番号']} live={live} photos={photos} onSelect={onSelect} onAlbum={onAlbum} />
           ))}
         </section>
       </div>
@@ -180,13 +180,14 @@ function extractYoutubeId(url) {
   return m ? m[1] : null;
 }
 
-function LiveCard({ live, onSelect }) {
+function LiveCard({ live, photos, onSelect, onAlbum }) {
   const isUpcoming = live['STATUS'] !== '済';
   const videoId = extractYoutubeId(live['動画リンク']);
   const thumbUrl = videoId
     ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
     : null;
   const year = new Date(live['日付'].replace(/\//g, '-')).getFullYear();
+  const photoCount = photos ? photos.filter((p) => p['ライブ番号'] === live['ライブ番号']).length : 0;
 
   return (
     <div
@@ -208,6 +209,15 @@ function LiveCard({ live, onSelect }) {
 
           <div className={styles.liveName}>{live['ライブ名']}</div>
 
+          {photoCount > 0 && (
+            <button
+              className={styles.photoCountBadge}
+              onClick={(e) => { e.stopPropagation(); onAlbum(live['ライブ番号']); }}
+            >
+              📷 {photoCount}枚
+            </button>
+          )}
+
           <div className={styles.meta}>
             {live['会場'] && <span>{live['会場']}</span>}
             {live['地域'] && <span className={styles.sep}>·</span>}
@@ -219,16 +229,29 @@ function LiveCard({ live, onSelect }) {
           </div>
         </div>
 
-        {thumbUrl && (
-          <a
-            className={styles.thumb}
-            href={live['動画リンク']}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img src={thumbUrl} alt={live['ライブ名']} />
-          </a>
+        {(thumbUrl || photoCount > 0) && (
+          <div className={styles.thumbCol}>
+            {thumbUrl && (
+              photoCount > 0 ? (
+                <div
+                  className={`${styles.thumb} ${styles.thumbAlbum}`}
+                  onClick={(e) => { e.stopPropagation(); onAlbum(live['ライブ番号']); }}
+                >
+                  <img src={thumbUrl} alt={live['ライブ名']} />
+                </div>
+              ) : (
+                <a
+                  className={styles.thumb}
+                  href={live['動画リンク']}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <img src={thumbUrl} alt={live['ライブ名']} />
+                </a>
+              )
+            )}
+          </div>
         )}
       </div>
     </div>

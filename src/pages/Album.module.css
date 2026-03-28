@@ -1,0 +1,216 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.notFound {
+  color: var(--sub);
+  text-align: center;
+  padding: 40px;
+}
+
+/* Header */
+.albumHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+}
+
+.liveName {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.liveDate {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  letter-spacing: 1px;
+  color: var(--gold);
+}
+
+.backBtn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--sub);
+  font-size: 13px;
+  padding: 7px 14px;
+  border-radius: 4px;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.backBtn:hover {
+  color: var(--text);
+  border-color: var(--gold);
+}
+
+.placeholder {
+  color: var(--sub);
+  font-size: 14px;
+  padding: 40px 0;
+  text-align: center;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+@media (max-width: 500px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.cell {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.thumb {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 6px;
+  transition: opacity 0.15s;
+  display: block;
+}
+
+.cell:hover .thumb {
+  opacity: 0.85;
+}
+
+.caption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 2px;
+}
+
+.captionText {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.4;
+}
+
+.photographer {
+  font-size: 12px;
+  color: var(--text2);
+}
+
+/* Lightbox */
+.lightboxOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  padding: 20px;
+}
+
+.lightbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 900px;
+  position: relative;
+}
+
+.lbClose {
+  position: absolute;
+  top: -48px;
+  right: 0;
+  background: none;
+  border: none;
+  color: var(--sub);
+  font-size: 22px;
+  padding: 8px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.lbClose:hover {
+  color: var(--text);
+}
+
+.lbImgWrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.lbImg {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 4px;
+  display: block;
+}
+
+.lbArrow {
+  background: none;
+  border: 1px solid rgba(201, 168, 76, 0.4);
+  color: #c9a84c;
+  font-size: 32px;
+  line-height: 1;
+  width: 44px;
+  height: 44px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.lbArrow:hover {
+  background: rgba(201, 168, 76, 0.15);
+}
+
+.lbCaption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 14px;
+}
+
+.lbCaptionText {
+  font-size: 14px;
+  color: var(--text);
+  text-align: center;
+}
+
+.lbPhotographer {
+  font-size: 12px;
+  color: var(--sub);
+}
+
+.lbCounter {
+  font-size: 12px;
+  color: var(--sub);
+  margin-top: 10px;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 1px;
+}
