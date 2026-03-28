@@ -11,6 +11,7 @@ export async function sendLog(event, detail = {}) {
   try {
     await fetch(GAS_URL, {
       method: 'POST',
+      mode: 'no-cors',
       body: JSON.stringify(payload),
     })
   } catch (e) {
