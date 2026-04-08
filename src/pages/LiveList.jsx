@@ -186,6 +186,7 @@ function LiveCard({ live, photos, onSelect, onAlbum }) {
   const thumbUrl = videoId
     ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
     : null;
+  const flyerUrl = live['フライヤーURL'] || null;
   const year = new Date(live['日付'].replace(/\//g, '-')).getFullYear();
   const photoCount = photos ? photos.filter((p) => p['ライブ番号'] === live['ライブ番号']).length : 0;
 
@@ -204,7 +205,6 @@ function LiveCard({ live, photos, onSelect, onAlbum }) {
                 <span className={styles.time}>{live['開始時間']}</span>
               )}
             </div>
-            {isUpcoming && <span className={styles.upcomingBadge}>UPCOMING</span>}
           </div>
 
           <div className={styles.liveName}>{live['ライブ名']}</div>
@@ -229,29 +229,57 @@ function LiveCard({ live, photos, onSelect, onAlbum }) {
           </div>
         </div>
 
-        {(thumbUrl || photoCount > 0) && (
+        {isUpcoming ? (
           <div className={styles.thumbCol}>
-            {thumbUrl && (
-              photoCount > 0 ? (
-                <div
-                  className={`${styles.thumb} ${styles.thumbAlbum}`}
-                  onClick={(e) => { e.stopPropagation(); onAlbum(live['ライブ番号']); }}
-                >
-                  <img src={thumbUrl} alt={live['ライブ名']} />
-                </div>
-              ) : (
+            {flyerUrl && (
+              <a
+                className={styles.flyerThumb}
+                href={flyerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <img src={flyerUrl} alt="フライヤー" />
+              </a>
+            )}
+            <span className={styles.upcomingThumb}>UPCOMING</span>
+          </div>
+        ) : (
+          (flyerUrl || thumbUrl || photoCount > 0) && (
+            <div className={styles.thumbCol}>
+              {flyerUrl && (
                 <a
-                  className={styles.thumb}
-                  href={live['動画リンク']}
+                  className={styles.flyerThumb}
+                  href={flyerUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <img src={thumbUrl} alt={live['ライブ名']} />
+                  <img src={flyerUrl} alt="フライヤー" />
                 </a>
-              )
-            )}
-          </div>
+              )}
+              {thumbUrl && (
+                photoCount > 0 ? (
+                  <div
+                    className={`${styles.thumb} ${styles.thumbAlbum}`}
+                    onClick={(e) => { e.stopPropagation(); onAlbum(live['ライブ番号']); }}
+                  >
+                    <img src={thumbUrl} alt={live['ライブ名']} />
+                  </div>
+                ) : (
+                  <a
+                    className={styles.thumb}
+                    href={live['動画リンク']}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <img src={thumbUrl} alt={live['ライブ名']} />
+                  </a>
+                )
+              )}
+            </div>
+          )
         )}
       </div>
     </div>
