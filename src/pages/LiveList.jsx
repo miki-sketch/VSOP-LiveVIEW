@@ -259,24 +259,15 @@ function LiveCard({ live, photos, onSelect, onAlbum }) {
                 </a>
               )}
               {thumbUrl && (
-                photoCount > 0 ? (
-                  <div
-                    className={`${styles.thumb} ${styles.thumbAlbum}`}
-                    onClick={(e) => { e.stopPropagation(); onAlbum(live['ライブ番号']); }}
-                  >
-                    <img src={thumbUrl} alt={live['ライブ名']} />
-                  </div>
-                ) : (
-                  <a
-                    className={styles.thumb}
-                    href={live['動画リンク']}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <img src={thumbUrl} alt={live['ライブ名']} />
-                  </a>
-                )
+                <a
+                  className={styles.thumb}
+                  href={live['動画リンク']}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <img src={thumbUrl} alt={live['ライブ名']} />
+                </a>
               )}
             </div>
           )
