@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { sendLog } from '../utils/logger';
 import styles from './Candidates.module.css';
 
@@ -33,6 +33,10 @@ function extractYoutubeId(url) {
 }
 
 export default function Candidates({ candidates }) {
+  useEffect(() => {
+    sendLog('access', { page: 'Candidates' });
+  }, []);
+
   // 初演済み（L列あり）を常に除外
   const active = useMemo(
     () => candidates.filter((c) => !c['初演']),
@@ -141,7 +145,7 @@ function CandidateCard({ candidate }) {
                 href={youtubeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={(e) => { e.stopPropagation(); sendLog('play', { songName: title, source: 'candidates' }); }}
+                onClick={(e) => { e.stopPropagation(); sendLog('play', { songName: title, liveName: `${title}（選曲候補）` }); }}
               >
                 <img src={thumbUrl} alt={title} />
               </a>
