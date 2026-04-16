@@ -162,10 +162,13 @@ function HistoryPane({ songName, entries, liveMap }) {
               <span className={styles.histDate}>
                 {live ? formatDate(live['日付']) : s['ライブ番号']}
               </span>
+              <span className={styles.histVenue}>
+                {live ? (live['会場'] || '') : ''}
+              </span>
               <span className={styles.histLiveName}>
                 {live ? live['ライブ名'] : ''}
               </span>
-              <span className={styles.histVocal}>{s['ボーカル']}</span>
+              <span className={styles.histVocal}>{s['ボーカル'] || '-'}</span>
               {live?.['動画リンク'] ? (
                 <a
                   className={styles.watchBtn}

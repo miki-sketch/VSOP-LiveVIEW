@@ -204,7 +204,7 @@
 
 .historyRow {
   display: grid;
-  grid-template-columns: 110px 1fr auto auto;
+  grid-template-columns: 110px minmax(60px, 120px) 1fr auto auto;
   align-items: center;
   gap: 10px;
   padding: 11px 20px;
@@ -222,6 +222,14 @@
   color: var(--gold);
   letter-spacing: 0.5px;
   flex-shrink: 0;
+}
+
+.histVenue {
+  color: var(--text2);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .histLiveName {
@@ -280,7 +288,11 @@
   }
 
   .historyRow {
-    grid-template-columns: 90px 1fr auto;
+    grid-template-columns: 90px 1fr auto auto;
+  }
+
+  .histVenue {
+    display: none;
   }
 
   .histVocal {
