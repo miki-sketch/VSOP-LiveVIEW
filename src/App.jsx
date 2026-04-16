@@ -101,7 +101,7 @@ export default function App() {
               </button>
               <button
                 className={`${styles.tab} ${tab === 'candidates' ? styles.tabActive : ''}`}
-                onClick={() => { setTab('candidates'); sendLog('access', { page: 'Candidates' }); }}
+                onClick={() => setTab('candidates')}
               >
                 選曲候補
               </button>
