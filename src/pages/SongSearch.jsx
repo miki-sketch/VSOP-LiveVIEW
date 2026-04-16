@@ -64,6 +64,7 @@ export default function SongSearch({ songs, lives }) {
   const handleSelect = (songName) => {
     setSelectedSong(songName);
     setMobileView('detail');
+    sendLog('access', { page: 'SongSearch', keyword: songName });
   };
 
   return (
