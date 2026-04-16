@@ -5,6 +5,7 @@ export const GIDS = {
   songs: '1268681059',
   reviews: '591211524',
   album: '467135274',
+  candidates: '1342322870',
 };
 
 export const GAS_URL =

@@ -5,33 +5,37 @@ import LiveList from './pages/LiveList';
 import LiveDetail from './pages/LiveDetail';
 import SongSearch from './pages/SongSearch';
 import Album from './pages/Album';
+import Candidates from './pages/Candidates';
 import { sendLog } from './utils/logger';
 import styles from './App.module.css';
 
 export default function App() {
-  const [tab, setTab] = useState('lives'); // 'lives' | 'songs' | 'album'
+  const [tab, setTab] = useState('lives'); // 'lives' | 'songs' | 'album' | 'candidates'
   const [selectedLiveNo, setSelectedLiveNo] = useState(null);
 
   const [lives, setLives] = useState([]);
   const [songs, setSongs] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [photos, setPhotos] = useState([]);
+  const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const loadAll = useCallback(async () => {
     try {
       setLoading(true);
-      const [l, s, r, p] = await Promise.all([
+      const [l, s, r, p, c] = await Promise.all([
         fetchSheet(GIDS.lives),
         fetchSheet(GIDS.songs),
         fetchSheet(GIDS.reviews),
         fetchSheet(GIDS.album),
+        fetchSheet(GIDS.candidates),
       ]);
       setLives(l);
       setSongs(s);
       setReviews(r);
       setPhotos(p);
+      setCandidates(c);
       setError(null);
     } catch (e) {
       setError(e.message);
@@ -95,6 +99,12 @@ export default function App() {
               >
                 曲目検索
               </button>
+              <button
+                className={`${styles.tab} ${tab === 'candidates' ? styles.tabActive : ''}`}
+                onClick={() => { setTab('candidates'); sendLog('access', { page: 'Candidates' }); }}
+              >
+                選曲候補
+              </button>
             </>
           )}
         </nav>
@@ -124,6 +134,8 @@ export default function App() {
               />
             ) : tab === 'lives' ? (
               <LiveList lives={lives} photos={photos} onSelect={goToDetail} onAlbum={goToAlbum} />
+            ) : tab === 'candidates' ? (
+              <Candidates candidates={candidates} />
             ) : (
               <SongSearch songs={songs} lives={lives} />
             )}
