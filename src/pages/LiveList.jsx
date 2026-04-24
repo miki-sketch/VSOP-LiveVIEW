@@ -4,7 +4,7 @@ import styles from './LiveList.module.css';
 export default function LiveList({ lives, photos, onSelect, onAlbum }) {
   const upcoming = lives
     .filter((l) => l['STATUS'] !== '済')
-    .sort((a, b) => new Date(a['日付'].replace(/\//g, '-')) - new Date(b['日付'].replace(/\//g, '-')));
+    .sort((a, b) => new Date(b['日付'].replace(/\//g, '-')) - new Date(a['日付'].replace(/\//g, '-')));
   const done = lives
     .filter((l) => l['STATUS'] === '済')
     .sort((a, b) => new Date(b['日付'].replace(/\//g, '-')) - new Date(a['日付'].replace(/\//g, '-')));
