@@ -1,8 +1,10 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import styles from './LiveList.module.css';
 
 export default function LiveList({ lives, photos, onSelect, onAlbum }) {
-  const upcoming = lives.filter((l) => l['STATUS'] !== '済');
+  const upcoming = lives
+    .filter((l) => l['STATUS'] !== '済')
+    .sort((a, b) => new Date(a['日付'].replace(/\//g, '-')) - new Date(b['日付'].replace(/\//g, '-')));
   const done = lives
     .filter((l) => l['STATUS'] === '済')
     .sort((a, b) => new Date(b['日付'].replace(/\//g, '-')) - new Date(a['日付'].replace(/\//g, '-')));
@@ -37,55 +39,56 @@ export default function LiveList({ lives, photos, onSelect, onAlbum }) {
 /* ── カスタムスクロールバー ───────────────────────────────── */
 
 function CustomScrollbar({ lives }) {
-  const THUMB_H = 22; // つまみの高さ（固定）
-  const MIN_GAP = 24; // バッジ間の最小間隔
+  const THUMB_H = 22;
+  const MIN_GAP = 24;
 
   const [thumbTop, setThumbTop] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [badges, setBadges] = useState([]); // { year, top }
+  const [badges, setBadges] = useState([]);
 
   const barRef = useRef(null);
   const dragStartY = useRef(0);
   const dragStartScrollY = useRef(0);
 
-  // ── 年バッジ位置計算 ──
-  // badgeTop = (cardOffsetTop / totalScrollHeight) * barHeight
-  useEffect(() => {
-    const compute = () => {
-      const bar = barRef.current;
-      if (!bar) return;
-      const barH = bar.clientHeight;
-      const totalH = document.documentElement.scrollHeight;
+  // ── 年バッジ位置計算：毎回DOMから直接取得 ──
+  const computeBadges = useCallback(() => {
+    const bar = barRef.current;
+    if (!bar) return;
+    const barH = bar.clientHeight;
+    const totalH = document.documentElement.scrollHeight;
+    if (!barH || !totalH) return;
 
-      const cards = document.querySelectorAll('[data-year]');
-      const raw = [];
-      let prevYear = null;
-      cards.forEach((card) => {
-        const year = parseInt(card.dataset.year, 10);
-        if (year !== prevYear) {
-          prevYear = year;
-          const offsetTop = card.getBoundingClientRect().top + window.scrollY;
-          raw.push({ year, top: (offsetTop / totalH) * barH });
-        }
-      });
-
-      // 重なり防止: 上から順に 24px 未満なら下にずらす
-      const adjusted = [];
-      for (const b of raw) {
-        let top = b.top;
-        if (adjusted.length > 0) {
-          const prev = adjusted[adjusted.length - 1].top;
-          if (top - prev < MIN_GAP) top = prev + MIN_GAP;
-        }
-        adjusted.push({ year: b.year, top });
+    const cards = document.querySelectorAll('[data-past-year]');
+    const raw = [];
+    const seenYears = new Set();
+    cards.forEach((card) => {
+      const year = parseInt(card.dataset.pastYear, 10);
+      if (!isNaN(year) && !seenYears.has(year)) {
+        seenYears.add(year);
+        const offsetTop = card.getBoundingClientRect().top + window.scrollY;
+        raw.push({ year, top: (offsetTop / totalH) * barH });
       }
-      setBadges(adjusted);
-    };
-    const t = setTimeout(compute, 300);
-    return () => clearTimeout(t);
-  }, [lives]);
+    });
 
-  // ── スクロール → つまみ位置更新 ──
+    const adjusted = [];
+    for (const b of raw) {
+      let top = b.top;
+      if (adjusted.length > 0) {
+        const prev = adjusted[adjusted.length - 1].top;
+        if (top - prev < MIN_GAP) top = prev + MIN_GAP;
+      }
+      adjusted.push({ year: b.year, top });
+    }
+    setBadges(adjusted);
+  }, []);
+
+  // データロード後、DOMレイアウト確定後にバッジ計算
+  useEffect(() => {
+    const id = requestAnimationFrame(computeBadges);
+    return () => cancelAnimationFrame(id);
+  }, [lives, computeBadges]);
+
+  // ── スクロール → つまみ位置更新 + バッジ位置更新 ──
   useEffect(() => {
     const onScroll = () => {
       const bar = barRef.current;
@@ -95,11 +98,12 @@ function CustomScrollbar({ lives }) {
       if (maxScroll <= 0) return;
       const top = (window.scrollY / maxScroll) * (barH - THUMB_H);
       setThumbTop(Math.max(0, Math.min(top, barH - THUMB_H)));
+      computeBadges();
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
     return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [computeBadges]);
 
   // ── マウスドラッグ ──
   const handleMouseDown = (e) => {
@@ -194,7 +198,7 @@ function LiveCard({ live, photos, onSelect, onAlbum }) {
     <div
       className={`${styles.card} ${isUpcoming ? styles.upcomingCard : ''}`}
       onClick={() => onSelect(live['ライブ番号'])}
-      data-year={isNaN(year) ? undefined : year}
+      data-past-year={!isUpcoming && !isNaN(year) ? year : undefined}
     >
       <div className={styles.cardBody}>
         <div className={styles.cardText}>
